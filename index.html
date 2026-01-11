@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Machine</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- QR Code Styling -->
+    <script type="text/javascript" src="https://unpkg.com/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
+    <!-- LZ-String -->
+    <script language="javascript" src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        /* Custom scrollbar for better look */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans text-gray-800 h-screen overflow-hidden flex flex-col md:flex-row">
+    <!-- App Container -->
+    <div id="app" class="w-full h-full flex flex-col md:flex-row">
+        <!-- Navigation Sidebar -->
+        <nav class="w-full md:w-64 bg-white border-r border-gray-200 flex flex-col shadow-sm z-10">
+            <div class="p-4 flex items-center justify-between md:justify-center border-b border-gray-100">
+                <h1 class="text-xl font-bold text-indigo-600 flex items-center gap-2">
+                    <i class="fa-solid fa-qrcode"></i> QR Machine
+                </h1>
+                <button id="mobile-menu-btn" class="md:hidden text-gray-500 hover:text-indigo-600">
+                    <i class="fa-solid fa-bars text-xl"></i>
+                </button>
+            </div>
+
+            <div id="nav-menu" class="hidden md:flex flex-col flex-1 p-4 gap-2 overflow-y-auto">
+                <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Create</div>
+                <button onclick="switchMode('url')" class="nav-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-colors bg-indigo-50 text-indigo-700" data-mode="url">
+                    <i class="fa-solid fa-link w-5"></i> URL
+                </button>
+                <button onclick="switchMode('text')" class="nav-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-colors hover:bg-gray-50 text-gray-600" data-mode="text">
+                    <i class="fa-solid fa-align-left w-5"></i> Text
+                </button>
+                <button onclick="switchMode('wifi')" class="nav-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-colors hover:bg-gray-50 text-gray-600" data-mode="wifi">
+                    <i class="fa-solid fa-wifi w-5"></i> WiFi
+                </button>
+                <button onclick="switchMode('contact')" class="nav-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-colors hover:bg-gray-50 text-gray-600" data-mode="contact">
+                    <i class="fa-solid fa-address-card w-5"></i> Contact
+                </button>
+
+                <div class="mt-6 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Projects</div>
+                <button onclick="openSavedProjects()" class="w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-colors hover:bg-gray-50 text-gray-600">
+                    <i class="fa-solid fa-folder-open w-5"></i> Saved Projects
+                </button>
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 flex flex-col md:flex-row overflow-hidden relative">
+
+            <!-- Scrollable Settings & Inputs -->
+            <div class="flex-1 overflow-y-auto p-4 md:p-8 bg-gray-50">
+                <div class="max-w-2xl mx-auto space-y-6">
+
+                    <!-- Input Section -->
+                    <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                        <h2 class="text-lg font-semibold mb-4 text-gray-700" id="input-title">Enter URL</h2>
+
+                        <!-- URL Input -->
+                        <div id="input-url" class="input-group">
+                            <input type="url" id="url-value" placeholder="https://example.com" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all">
+                        </div>
+
+                        <!-- Text Input -->
+                        <div id="input-text" class="input-group hidden">
+                            <textarea id="text-value" rows="4" placeholder="Enter your text here..." class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"></textarea>
+                        </div>
+
+                        <!-- WiFi Input -->
+                        <div id="input-wifi" class="input-group hidden space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Network Name (SSID)</label>
+                                <input type="text" id="wifi-ssid" placeholder="WiFi Name" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                                <input type="text" id="wifi-password" placeholder="Password" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Encryption</label>
+                                <select id="wifi-encryption" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none bg-white">
+                                    <option value="WPA">WPA/WPA2</option>
+                                    <option value="WEP">WEP</option>
+                                    <option value="nopass">None</option>
+                                </select>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="checkbox" id="wifi-hidden" class="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                                <label for="wifi-hidden" class="ml-2 text-sm text-gray-600">Hidden Network</label>
+                            </div>
+                        </div>
+
+                        <!-- Contact Input -->
+                        <div id="input-contact" class="input-group hidden space-y-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                                    <input type="text" id="contact-name" placeholder="John Doe" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Organization</label>
+                                    <input type="text" id="contact-org" placeholder="Company Inc." class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                                    <input type="tel" id="contact-phone" placeholder="+1 234 567 8900" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                                    <input type="email" id="contact-email" placeholder="john@example.com" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Job Title</label>
+                                <input type="text" id="contact-title" placeholder="Software Engineer" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Customization Panel -->
+                    <div id="customization-panel" class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                        <div class="p-4 bg-gray-50 border-b border-gray-100 flex justify-between items-center cursor-pointer" onclick="toggleCustomization()">
+                            <h2 class="text-lg font-semibold text-gray-700">Customization</h2>
+                            <i id="customization-icon" class="fa-solid fa-chevron-down text-gray-400 transition-transform"></i>
+                        </div>
+
+                        <div id="customization-content" class="p-6 space-y-6">
+
+                            <!-- Colors -->
+                            <div>
+                                <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Colors</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Dots Color</label>
+                                        <div class="flex items-center gap-2">
+                                            <input type="color" id="color-dots" class="w-10 h-10 p-0 border-0 rounded cursor-pointer" value="#000000">
+                                            <input type="text" id="color-dots-text" class="w-full p-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-indigo-500 outline-none" value="#000000">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Background Color</label>
+                                        <div class="flex items-center gap-2">
+                                            <input type="color" id="color-bg" class="w-10 h-10 p-0 border-0 rounded cursor-pointer" value="#ffffff">
+                                            <input type="text" id="color-bg-text" class="w-full p-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-indigo-500 outline-none" value="#ffffff">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Shapes -->
+                            <div>
+                                <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Shapes</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Dots Style</label>
+                                        <select id="shape-dots" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none bg-white">
+                                            <option value="square">Square</option>
+                                            <option value="dots">Dots</option>
+                                            <option value="rounded">Rounded</option>
+                                            <option value="extra-rounded">Extra Rounded</option>
+                                            <option value="classy">Classy</option>
+                                            <option value="classy-rounded">Classy Rounded</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Corner Square</label>
+                                        <select id="shape-corner-square" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none bg-white">
+                                            <option value="square">Square</option>
+                                            <option value="dot">Dot</option>
+                                            <option value="extra-rounded">Extra Rounded</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Corner Dot</label>
+                                        <select id="shape-corner-dot" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none bg-white">
+                                            <option value="square">Square</option>
+                                            <option value="dot">Dot</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Logo -->
+                            <div>
+                                <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Logo</h3>
+                                <div class="space-y-4">
+                                    <div class="flex items-center justify-center w-full">
+                                        <label for="logo-upload" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+                                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                                <i class="fa-solid fa-cloud-arrow-up text-2xl text-gray-400 mb-2"></i>
+                                                <p class="mb-2 text-sm text-gray-500"><span class="font-semibold">Click to upload</span> or drag and drop</p>
+                                                <p class="text-xs text-gray-500">SVG, PNG, JPG or GIF</p>
+                                            </div>
+                                            <input id="logo-upload" type="file" class="hidden" accept="image/*" />
+                                        </label>
+                                    </div>
+
+                                    <!-- Logo Preview & Crop Options (Hidden initially) -->
+                                    <div id="logo-options" class="hidden space-y-4 border-t border-gray-100 pt-4">
+                                        <div class="flex items-center gap-4">
+                                            <div class="w-16 h-16 border rounded bg-gray-100 flex items-center justify-center overflow-hidden">
+                                                <img id="logo-preview-img" src="" alt="Logo" class="max-w-full max-h-full object-contain">
+                                            </div>
+                                            <button onclick="clearLogo()" class="text-red-500 hover:text-red-700 text-sm font-medium">Remove Logo</button>
+                                        </div>
+
+                                        <!-- Note: Real cropping would require a complex UI or library.
+                                             For now we rely on the QR library's ability to overlay and we can offer basic shape masking if needed via canvas preprocessing,
+                                             but the prompt asked for "crop the logo in the center".
+                                             We will simulate this by allowing them to choose a "Background Shape" for the logo if the library supports it, or just plain upload.
+                                             Actually, qrcode-styling supports logo, but not "cropping".
+                                             We will implement a simple client-side crop/mask using Canvas before passing to QR.
+                                        -->
+
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Logo Crop Shape</label>
+                                            <div class="flex gap-2">
+                                                <button onclick="setLogoCrop('none')" class="px-3 py-1 text-xs border rounded hover:bg-gray-50 bg-indigo-50 border-indigo-200">None</button>
+                                                <button onclick="setLogoCrop('circle')" class="px-3 py-1 text-xs border rounded hover:bg-gray-50">Circle</button>
+                                                <button onclick="setLogoCrop('square')" class="px-3 py-1 text-xs border rounded hover:bg-gray-50">Square</button>
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Logo Size</label>
+                                            <input type="range" id="logo-size" min="0.1" max="0.5" step="0.05" value="0.4" class="w-full">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Fixed/Sticky Preview Panel (Desktop: Right Side, Mobile: Bottom Sheet logic handled via CSS/JS later, but for now just bottom of stack) -->
+            <div class="w-full md:w-96 bg-white border-l border-gray-200 p-6 flex flex-col items-center justify-center shadow-lg z-20">
+                <div class="sticky top-6 flex flex-col items-center gap-6 w-full">
+                    <h2 class="text-lg font-semibold text-gray-700 self-start w-full flex justify-between items-center">
+                        <span>Preview</span>
+                        <span class="text-xs font-normal text-gray-400 bg-gray-100 px-2 py-1 rounded">Live Update</span>
+                    </h2>
+
+                    <div id="qr-container" class="bg-white p-4 rounded-xl shadow-inner border border-gray-100 flex items-center justify-center w-[300px] h-[300px]">
+                        <!-- QR Code Canvas will be rendered here -->
+                    </div>
+
+                    <div class="flex gap-2 w-full">
+                        <button onclick="downloadQR()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-download"></i> Download
+                        </button>
+                        <button onclick="shareQR()" class="flex-1 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-share-nodes"></i> Share
+                        </button>
+                    </div>
+                     <button onclick="saveCurrentProject()" class="w-full text-indigo-600 hover:text-indigo-800 font-medium py-2 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm">
+                        <i class="fa-regular fa-bookmark"></i> Save to Projects
+                    </button>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Main Script -->
+    <script>
+        // Application State
+        const appState = {
+            currentMode: 'url', // url, wifi, contact, text
+            qrOptions: {
+                width: 300,
+                height: 300,
+                type: 'svg',
+                data: 'https://matthijsvanmierlo.github.io/qrmachine',
+                image: '',
+                dotsOptions: {
+                    color: '#000000',
+                    type: 'square'
+                },
+                backgroundOptions: {
+                    color: '#ffffff',
+                },
+                cornersSquareOptions: {
+                    type: 'square',
+                    color: '#000000'
+                },
+                cornersDotOptions: {
+                    type: 'square',
+                    color: '#000000'
+                },
+                imageOptions: {
+                    crossOrigin: 'anonymous',
+                    margin: 0,
+                    imageSize: 0.4
+                }
+            },
+            inputData: {
+                url: 'https://matthijsvanmierlo.github.io/qrmachine',
+                text: '',
+                wifi: { ssid: '', password: '', encryption: 'WPA' },
+                contact: { name: '', phone: '', email: '', org: '', title: '' }
+            },
+            savedProjects: []
+        };
+
+        // Local Storage Keys
+        const STORAGE_KEY_PROJECTS = 'qrmachine_projects';
+        const STORAGE_KEY_FIRST_TIME = 'qrmachine_first_time';
+
+        // Utility Functions
+        function saveToLocalStorage() {
+            localStorage.setItem(STORAGE_KEY_PROJECTS, JSON.stringify(appState.savedProjects));
+        }
+
+        function loadFromLocalStorage() {
+            const projects = localStorage.getItem(STORAGE_KEY_PROJECTS);
+            if (projects) {
+                appState.savedProjects = JSON.parse(projects);
+            }
+        }
+
+        function isFirstTimeUser() {
+            return !localStorage.getItem(STORAGE_KEY_FIRST_TIME);
+        }
+
+        function setFirstTimeUserSeen() {
+            localStorage.setItem(STORAGE_KEY_FIRST_TIME, 'false');
+        }
+
+        function generateShareLink() {
+            // We only share the current configuration, not the entire list of saved projects
+            const shareData = {
+                mode: appState.currentMode,
+                qrOptions: appState.qrOptions,
+                inputData: appState.inputData
+            };
+            // Remove image data if it's too large (base64) for URL, or maybe warn user.
+            // For now, let's keep it but it might hit URL limits if logo is huge.
+            // A better way for logos in sharing is asking user to provide URL or handle it gracefully.
+            // However, LZString compresses well. Let's try.
+
+            const jsonString = JSON.stringify(shareData);
+            const compressed = LZString.compressToEncodedURIComponent(jsonString);
+            return `${window.location.origin}${window.location.pathname}#${compressed}`;
+        }
+
+        function loadFromShareLink() {
+            const hash = window.location.hash.substring(1);
+            if (hash) {
+                try {
+                    const decompressed = LZString.decompressFromEncodedURIComponent(hash);
+                    if (decompressed) {
+                        const data = JSON.parse(decompressed);
+                        // Merge into state
+                        appState.currentMode = data.mode || 'url';
+                        appState.qrOptions = { ...appState.qrOptions, ...data.qrOptions };
+                        appState.inputData = { ...appState.inputData, ...data.inputData };
+                        return true;
+                    }
+                } catch (e) {
+                    console.error("Failed to parse share link", e);
+                }
+            }
+            return false;
+        }
+
+        function saveProject(name) {
+            const project = {
+                id: Date.now(),
+                name: name,
+                mode: appState.currentMode,
+                qrOptions: JSON.parse(JSON.stringify(appState.qrOptions)), // Deep copy
+                inputData: JSON.parse(JSON.stringify(appState.inputData))
+            };
+            appState.savedProjects.push(project);
+            saveToLocalStorage();
+            return project;
+        }
+
+        function deleteProject(id) {
+            appState.savedProjects = appState.savedProjects.filter(p => p.id !== id);
+            saveToLocalStorage();
+        }
+
+        function loadProject(id) {
+            const project = appState.savedProjects.find(p => p.id === id);
+            if (project) {
+                appState.currentMode = project.mode;
+                appState.qrOptions = JSON.parse(JSON.stringify(project.qrOptions));
+                appState.inputData = JSON.parse(JSON.stringify(project.inputData));
+                return true;
+            }
+            return false;
+        }
+
+        // Global QRCode Instance
+        let qrCode;
+
+        // --- Logic & Event Handling ---
+
+        function initQRCode() {
+            qrCode = new QRCodeStyling(appState.qrOptions);
+            qrCode.append(document.getElementById("qr-container"));
+        }
+
+        function updateQRCode() {
+            // Update Data based on mode
+            let data = "";
+            const mode = appState.currentMode;
+            const input = appState.inputData;
+
+            if (mode === 'url') {
+                data = input.url;
+            } else if (mode === 'text') {
+                data = input.text;
+            } else if (mode === 'wifi') {
+                // WIFI:S:MySSID;T:WPA;P:MyPass;H:false;;
+                const hidden = document.getElementById('wifi-hidden').checked ? 'true' : 'false';
+                // Some readers prefer T:WPA; others T:WPA2; usually WPA works for WPA2.
+                // Format: WIFI:T:WPA;S:mynetwork;P:mypass;;
+                data = `WIFI:T:${input.wifi.encryption};S:${input.wifi.ssid};P:${input.wifi.password};H:${hidden};;`;
+            } else if (mode === 'contact') {
+                // VCard 3.0
+                data = `BEGIN:VCARD\nVERSION:3.0\nN:${input.contact.name}\nFN:${input.contact.name}\nORG:${input.contact.org}\nTITLE:${input.contact.title}\nTEL:${input.contact.phone}\nEMAIL:${input.contact.email}\nEND:VCARD`;
+            }
+
+            // Update State Options
+            appState.qrOptions.data = data;
+
+            // Colors
+            appState.qrOptions.dotsOptions.color = document.getElementById('color-dots').value;
+            appState.qrOptions.backgroundOptions.color = document.getElementById('color-bg').value;
+            appState.qrOptions.cornersSquareOptions.color = document.getElementById('color-dots').value; // Match dots for now or add separate
+            appState.qrOptions.cornersDotOptions.color = document.getElementById('color-dots').value;
+
+            // Shapes
+            appState.qrOptions.dotsOptions.type = document.getElementById('shape-dots').value;
+            appState.qrOptions.cornersSquareOptions.type = document.getElementById('shape-corner-square').value;
+            appState.qrOptions.cornersDotOptions.type = document.getElementById('shape-corner-dot').value;
+
+            // Image Options
+            appState.qrOptions.imageOptions.imageSize = parseFloat(document.getElementById('logo-size').value);
+
+            // Re-render
+            qrCode.update(appState.qrOptions);
+        }
+
+        function switchMode(mode) {
+            appState.currentMode = mode;
+
+            // Update UI
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                if (btn.dataset.mode === mode) {
+                    btn.classList.remove('text-gray-600', 'hover:bg-gray-50');
+                    btn.classList.add('bg-indigo-50', 'text-indigo-700');
+                } else {
+                    btn.classList.add('text-gray-600', 'hover:bg-gray-50');
+                    btn.classList.remove('bg-indigo-50', 'text-indigo-700');
+                }
+            });
+
+            // Toggle Inputs
+            document.querySelectorAll('.input-group').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`input-${mode}`).classList.remove('hidden');
+
+            // Update Title
+            const titles = {
+                'url': 'Enter URL',
+                'text': 'Enter Text',
+                'wifi': 'WiFi Configuration',
+                'contact': 'Contact Information'
+            };
+            document.getElementById('input-title').innerText = titles[mode];
+
+            updateQRCode();
+        }
+
+        // --- Event Listeners ---
+
+        function setupEventListeners() {
+            // URL
+            document.getElementById('url-value').addEventListener('input', (e) => {
+                appState.inputData.url = e.target.value;
+                updateQRCode();
+            });
+
+            // Text
+            document.getElementById('text-value').addEventListener('input', (e) => {
+                appState.inputData.text = e.target.value;
+                updateQRCode();
+            });
+
+            // WiFi
+            ['wifi-ssid', 'wifi-password', 'wifi-encryption'].forEach(id => {
+                document.getElementById(id).addEventListener('input', (e) => {
+                    const key = id.split('-')[1]; // ssid, password, encryption
+                    appState.inputData.wifi[key] = e.target.value;
+                    updateQRCode();
+                });
+            });
+            document.getElementById('wifi-hidden').addEventListener('change', updateQRCode);
+
+            // Contact
+            ['contact-name', 'contact-org', 'contact-phone', 'contact-email', 'contact-title'].forEach(id => {
+                document.getElementById(id).addEventListener('input', (e) => {
+                    const key = id.split('-')[1];
+                    appState.inputData.contact[key] = e.target.value;
+                    updateQRCode();
+                });
+            });
+
+            // Customization - Colors
+            document.getElementById('color-dots').addEventListener('input', (e) => {
+                document.getElementById('color-dots-text').value = e.target.value;
+                updateQRCode();
+            });
+            document.getElementById('color-bg').addEventListener('input', (e) => {
+                document.getElementById('color-bg-text').value = e.target.value;
+                updateQRCode();
+            });
+            // Sync text inputs back to color pickers
+            document.getElementById('color-dots-text').addEventListener('input', (e) => {
+                document.getElementById('color-dots').value = e.target.value;
+                updateQRCode();
+            });
+            document.getElementById('color-bg-text').addEventListener('input', (e) => {
+                document.getElementById('color-bg').value = e.target.value;
+                updateQRCode();
+            });
+
+            // Customization - Shapes
+            ['shape-dots', 'shape-corner-square', 'shape-corner-dot'].forEach(id => {
+                document.getElementById(id).addEventListener('change', updateQRCode);
+            });
+
+            // Customization - Logo
+            document.getElementById('logo-upload').addEventListener('change', handleLogoUpload);
+            document.getElementById('logo-size').addEventListener('input', updateQRCode);
+
+            // Mobile Menu
+            document.getElementById('mobile-menu-btn').addEventListener('click', () => {
+                const nav = document.getElementById('nav-menu');
+                nav.classList.toggle('hidden');
+                nav.classList.toggle('flex');
+                nav.classList.toggle('absolute');
+                nav.classList.toggle('top-16');
+                nav.classList.toggle('left-0');
+                nav.classList.toggle('w-full');
+                nav.classList.toggle('bg-white');
+                nav.classList.toggle('z-50');
+                nav.classList.toggle('shadow-lg');
+            });
+        }
+
+        // --- Logo Handling ---
+
+        // This variable holds the "raw" uploaded logo file (dataURL)
+        let rawLogoData = null;
+        let currentCropShape = 'none';
+
+        function handleLogoUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                rawLogoData = event.target.result;
+                processLogo();
+
+                // Show options
+                document.getElementById('logo-options').classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function setLogoCrop(shape) {
+            currentCropShape = shape;
+            processLogo();
+        }
+
+        function clearLogo() {
+            rawLogoData = null;
+            appState.qrOptions.image = '';
+            document.getElementById('logo-preview-img').src = '';
+            document.getElementById('logo-upload').value = ''; // reset file input
+            document.getElementById('logo-options').classList.add('hidden');
+            updateQRCode();
+        }
+
+        function processLogo() {
+            if (!rawLogoData) return;
+
+            if (currentCropShape === 'none') {
+                appState.qrOptions.image = rawLogoData;
+                document.getElementById('logo-preview-img').src = rawLogoData;
+                updateQRCode();
+                return;
+            }
+
+            // Create a canvas to crop/mask the image
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const size = Math.min(img.width, img.height);
+                canvas.width = size;
+                canvas.height = size;
+                const ctx = canvas.getContext('2d');
+
+                // Center crop calculation
+                const sx = (img.width - size) / 2;
+                const sy = (img.height - size) / 2;
+
+                ctx.beginPath();
+                if (currentCropShape === 'circle') {
+                    ctx.arc(size/2, size/2, size/2, 0, Math.PI * 2);
+                } else if (currentCropShape === 'square') {
+                    ctx.rect(0, 0, size, size);
+                }
+                ctx.clip();
+
+                ctx.drawImage(img, sx, sy, size, size, 0, 0, size, size);
+
+                const croppedData = canvas.toDataURL();
+                appState.qrOptions.image = croppedData;
+                document.getElementById('logo-preview-img').src = croppedData;
+                updateQRCode();
+            };
+            img.src = rawLogoData;
+        }
+
+        function toggleCustomization() {
+            const content = document.getElementById('customization-content');
+            const icon = document.getElementById('customization-icon');
+            // We'll toggle height logic or just class for now. But since we used "overflow-hidden" on parent and p-6 on content...
+            // Let's just toggle 'hidden' on content for simplicity
+            content.classList.toggle('hidden');
+            icon.classList.toggle('rotate-180');
+        }
+
+        function restoreUIFromState() {
+            // Restore Inputs
+            document.getElementById('url-value').value = appState.inputData.url;
+            document.getElementById('text-value').value = appState.inputData.text;
+
+            document.getElementById('wifi-ssid').value = appState.inputData.wifi.ssid;
+            document.getElementById('wifi-password').value = appState.inputData.wifi.password;
+            document.getElementById('wifi-encryption').value = appState.inputData.wifi.encryption;
+
+            document.getElementById('contact-name').value = appState.inputData.contact.name;
+            document.getElementById('contact-org').value = appState.inputData.contact.org;
+            document.getElementById('contact-phone').value = appState.inputData.contact.phone;
+            document.getElementById('contact-email').value = appState.inputData.contact.email;
+            document.getElementById('contact-title').value = appState.inputData.contact.title;
+
+            // Restore Customization UI
+            document.getElementById('color-dots').value = appState.qrOptions.dotsOptions.color;
+            document.getElementById('color-dots-text').value = appState.qrOptions.dotsOptions.color;
+            document.getElementById('color-bg').value = appState.qrOptions.backgroundOptions.color;
+            document.getElementById('color-bg-text').value = appState.qrOptions.backgroundOptions.color;
+
+            document.getElementById('shape-dots').value = appState.qrOptions.dotsOptions.type;
+            document.getElementById('shape-corner-square').value = appState.qrOptions.cornersSquareOptions.type;
+            document.getElementById('shape-corner-dot').value = appState.qrOptions.cornersDotOptions.type;
+
+            document.getElementById('logo-size').value = appState.qrOptions.imageOptions.imageSize;
+
+            if (appState.qrOptions.image) {
+                // If we have an image in state (e.g. from loaded project or link), show it
+                // Note: If image data is huge, it might be slow.
+                document.getElementById('logo-preview-img').src = appState.qrOptions.image;
+                document.getElementById('logo-options').classList.remove('hidden');
+                // We don't have rawLogoData from localstorage easily unless we saved it specifically separate from qrOptions.image (which is processed).
+                // So "crop" might re-crop already cropped image if we aren't careful.
+                // For simplicity, we assume loaded image is final.
+                rawLogoData = appState.qrOptions.image;
+            }
+
+            switchMode(appState.currentMode);
+        }
+
+        function downloadQR() {
+            qrCode.download({ name: "qrmachine", extension: "png" });
+        }
+
+        function shareQR() {
+            const link = generateShareLink();
+
+            Swal.fire({
+                title: 'Share QR Code',
+                text: 'Copy this link to share your QR Code configuration',
+                input: 'text',
+                inputValue: link,
+                showCancelButton: true,
+                confirmButtonText: 'Copy',
+                cancelButtonText: 'Close',
+                didOpen: () => {
+                   const input = Swal.getInput();
+                   input.select();
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    navigator.clipboard.writeText(link);
+                    Swal.fire('Copied!', 'Link copied to clipboard', 'success');
+                }
+            });
+        }
+
+        function saveCurrentProject() {
+            Swal.fire({
+                title: 'Save Project',
+                input: 'text',
+                inputLabel: 'Project Name',
+                inputValue: 'My QR Code',
+                showCancelButton: true,
+                confirmButtonText: 'Save',
+            }).then((result) => {
+                if (result.isConfirmed && result.value) {
+                    saveProject(result.value);
+                    Swal.fire('Saved!', 'Project saved successfully', 'success');
+                }
+            });
+        }
+
+        function openSavedProjects() {
+            // Generate HTML list
+            if (appState.savedProjects.length === 0) {
+                Swal.fire('Saved Projects', 'No saved projects found.', 'info');
+                return;
+            }
+
+            const listHtml = appState.savedProjects.map(p => `
+                <div class="flex justify-between items-center p-3 border-b border-gray-100 last:border-0 hover:bg-gray-50">
+                    <div class="text-left">
+                        <div class="font-medium text-gray-800">${p.name}</div>
+                        <div class="text-xs text-gray-500 capitalize">${p.mode} - ${new Date(p.id).toLocaleDateString()}</div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="loadProjectById(${p.id})" class="text-indigo-600 hover:text-indigo-800 px-2 py-1"><i class="fa-solid fa-upload"></i></button>
+                        <button onclick="deleteProjectById(${p.id})" class="text-red-500 hover:text-red-700 px-2 py-1"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                </div>
+            `).join('');
+
+            Swal.fire({
+                title: 'Saved Projects',
+                html: `<div class="max-h-60 overflow-y-auto border border-gray-200 rounded-lg">${listHtml}</div>`,
+                showConfirmButton: false,
+                showCloseButton: true,
+                width: '600px'
+            });
+        }
+
+        // Helpers for sweetalert html onclicks (need to be global)
+        window.loadProjectById = (id) => {
+            if (loadProject(id)) {
+                restoreUIFromState();
+                Swal.close();
+            }
+        };
+
+        window.deleteProjectById = (id) => {
+            deleteProject(id);
+            // Refresh the modal
+            Swal.close();
+            setTimeout(openSavedProjects, 100); // Small delay to prevent conflict
+        };
+
+        // Init
+        function init() {
+            loadFromLocalStorage();
+            initQRCode();
+            setupEventListeners();
+
+            const loadedFromLink = loadFromShareLink();
+            restoreUIFromState(); // Syncs UI with state (either default, loaded from local, or loaded from link)
+
+            if (isFirstTimeUser()) {
+                Swal.fire({
+                    title: 'Welcome to QR Machine!',
+                    text: 'A privacy-first, local-only QR Code generator. Create custom QR codes for URLs, WiFi, Contacts, and more. Everything is saved in your browser.',
+                    icon: 'info',
+                    confirmButtonText: 'Get Started'
+                }).then(() => {
+                    setFirstTimeUserSeen();
+                });
+            }
+        }
+
+        // Start
+        window.onload = init;
+    </script>
+</body>
+</html>
