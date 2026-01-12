@@ -36,9 +36,9 @@
         }
     </style>
 </head>
-<body class="bg-gray-100 font-sans text-gray-800 min-h-screen md:h-screen md:overflow-hidden flex flex-col md:flex-row">
+<body class="bg-gray-100 font-sans text-gray-800 min-h-screen flex flex-col md:flex-row">
     <!-- App Container -->
-    <div id="app" class="w-full flex flex-col md:flex-row md:h-full">
+    <div id="app" class="w-full flex flex-col md:flex-row min-h-screen">
         <!-- Navigation Sidebar -->
         <nav class="w-full md:w-64 bg-white border-r border-gray-200 flex flex-col shadow-sm z-10">
             <div class="p-4 flex items-center justify-between md:justify-center border-b border-gray-100">
@@ -73,10 +73,10 @@
         </nav>
 
         <!-- Main Content Area -->
-        <main class="flex-1 flex flex-col md:flex-row md:overflow-hidden relative">
+        <main class="flex-1 flex flex-col md:flex-row relative">
 
             <!-- Scrollable Settings & Inputs -->
-            <div class="flex-1 md:overflow-y-auto p-4 md:p-8 bg-gray-50">
+            <div class="flex-1 p-4 md:p-8 bg-gray-50">
                 <div class="max-w-2xl mx-auto space-y-6">
 
                     <!-- Input Section -->
@@ -121,26 +121,41 @@
                         <div id="input-contact" class="input-group hidden space-y-4">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                                    <div class="flex items-center justify-between mb-1">
+                                        <label class="block text-sm font-medium text-gray-700">Full Name</label>
+                                        <input type="checkbox" id="check-contact-name" class="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" checked>
+                                    </div>
                                     <input type="text" id="contact-name" placeholder="John Doe" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Organization</label>
+                                    <div class="flex items-center justify-between mb-1">
+                                        <label class="block text-sm font-medium text-gray-700">Organization</label>
+                                        <input type="checkbox" id="check-contact-org" class="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" checked>
+                                    </div>
                                     <input type="text" id="contact-org" placeholder="Company Inc." class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
                                 </div>
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                                    <div class="flex items-center justify-between mb-1">
+                                        <label class="block text-sm font-medium text-gray-700">Phone</label>
+                                        <input type="checkbox" id="check-contact-phone" class="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" checked>
+                                    </div>
                                     <input type="tel" id="contact-phone" placeholder="+1 234 567 8900" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                                    <div class="flex items-center justify-between mb-1">
+                                        <label class="block text-sm font-medium text-gray-700">Email</label>
+                                        <input type="checkbox" id="check-contact-email" class="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" checked>
+                                    </div>
                                     <input type="email" id="contact-email" placeholder="john@example.com" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
                                 </div>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Job Title</label>
+                                <div class="flex items-center justify-between mb-1">
+                                    <label class="block text-sm font-medium text-gray-700">Job Title</label>
+                                    <input type="checkbox" id="check-contact-title" class="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" checked>
+                                </div>
                                 <input type="text" id="contact-title" placeholder="Software Engineer" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
                             </div>
                         </div>
@@ -154,6 +169,22 @@
                         </div>
 
                         <div id="customization-content" class="p-6 space-y-6">
+
+                            <!-- Saved Styles (Presets) -->
+                            <div class="pb-6 border-b border-gray-100">
+                                <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Saved Styles</h3>
+                                <div class="flex gap-2 items-center">
+                                    <select id="style-preset-select" class="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none bg-white text-sm" onchange="loadStylePreset(this.value)">
+                                        <option value="">Select a preset...</option>
+                                    </select>
+                                    <button onclick="saveStylePreset()" class="p-2 text-indigo-600 hover:bg-indigo-50 rounded border border-indigo-200" title="Save current style">
+                                        <i class="fa-solid fa-floppy-disk"></i>
+                                    </button>
+                                    <button onclick="deleteStylePreset()" class="p-2 text-red-500 hover:bg-red-50 rounded border border-red-200" title="Delete selected preset">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
 
                             <!-- Colors -->
                             <div>
@@ -265,8 +296,8 @@
             </div>
 
             <!-- Fixed/Sticky Preview Panel (Desktop: Right Side, Mobile: Bottom Sheet logic handled via CSS/JS later, but for now just bottom of stack) -->
-            <div class="w-full md:w-96 bg-white border-l border-gray-200 p-4 md:p-6 flex flex-col md:overflow-y-auto shadow-lg z-20 md:h-full">
-                <div class="flex flex-col items-center gap-6 w-full my-auto">
+            <div class="w-full md:w-96 bg-white border-l border-gray-200 p-4 md:p-6 flex flex-col shadow-lg z-20 md:h-auto md:sticky md:top-0 h-fit">
+                <div class="flex flex-col items-center gap-6 w-full">
                     <h2 class="text-lg font-semibold text-gray-700 self-start w-full flex justify-between items-center">
                         <span>Preview</span>
                         <span class="text-xs font-normal text-gray-400 bg-gray-100 px-2 py-1 rounded">Live Update</span>
@@ -329,24 +360,31 @@
                 url: 'https://matthijsvanmierlo.github.io/qrmachine',
                 text: '',
                 wifi: { ssid: '', password: '', encryption: 'WPA' },
-                contact: { name: '', phone: '', email: '', org: '', title: '' }
+                contact: { name: '', phone: '', email: '', org: '', title: '', includeName: true, includeOrg: true, includePhone: true, includeEmail: true, includeTitle: true }
             },
-            savedProjects: []
+            savedProjects: [],
+            stylePresets: []
         };
 
         // Local Storage Keys
         const STORAGE_KEY_PROJECTS = 'qrmachine_projects';
+        const STORAGE_KEY_PRESETS = 'qrmachine_style_presets';
         const STORAGE_KEY_FIRST_TIME = 'qrmachine_first_time';
 
         // Utility Functions
         function saveToLocalStorage() {
             localStorage.setItem(STORAGE_KEY_PROJECTS, JSON.stringify(appState.savedProjects));
+            localStorage.setItem(STORAGE_KEY_PRESETS, JSON.stringify(appState.stylePresets));
         }
 
         function loadFromLocalStorage() {
             const projects = localStorage.getItem(STORAGE_KEY_PROJECTS);
             if (projects) {
                 appState.savedProjects = JSON.parse(projects);
+            }
+            const presets = localStorage.getItem(STORAGE_KEY_PRESETS);
+            if (presets) {
+                appState.stylePresets = JSON.parse(presets);
             }
         }
 
@@ -472,7 +510,14 @@
                 data = `WIFI:T:${input.wifi.encryption};S:${input.wifi.ssid};P:${input.wifi.password};H:${hidden};;`;
             } else if (mode === 'contact') {
                 // VCard 3.0
-                data = `BEGIN:VCARD\nVERSION:3.0\nN:${input.contact.name}\nFN:${input.contact.name}\nORG:${input.contact.org}\nTITLE:${input.contact.title}\nTEL:${input.contact.phone}\nEMAIL:${input.contact.email}\nEND:VCARD`;
+                let vcard = `BEGIN:VCARD\nVERSION:3.0`;
+                if (input.contact.includeName) vcard += `\nN:${input.contact.name}\nFN:${input.contact.name}`;
+                if (input.contact.includeOrg) vcard += `\nORG:${input.contact.org}`;
+                if (input.contact.includeTitle) vcard += `\nTITLE:${input.contact.title}`;
+                if (input.contact.includePhone) vcard += `\nTEL:${input.contact.phone}`;
+                if (input.contact.includeEmail) vcard += `\nEMAIL:${input.contact.email}`;
+                vcard += `\nEND:VCARD`;
+                data = vcard;
             }
 
             // Update State Options
@@ -547,6 +592,13 @@
                 document.getElementById(id).addEventListener('input', (e) => {
                     const key = id.split('-')[1]; // ssid, password, encryption
                     appState.inputData.wifi[key] = e.target.value;
+                    updateQRCode();
+                });
+            });
+            ['check-contact-name', 'check-contact-org', 'check-contact-phone', 'check-contact-email', 'check-contact-title'].forEach(id => {
+                document.getElementById(id).addEventListener('change', (e) => {
+                    const key = 'include' + id.split('-')[2].charAt(0).toUpperCase() + id.split('-')[2].slice(1);
+                    appState.inputData.contact[key] = e.target.checked;
                     updateQRCode();
                 });
             });
@@ -704,6 +756,13 @@
             document.getElementById('contact-email').value = appState.inputData.contact.email;
             document.getElementById('contact-title').value = appState.inputData.contact.title;
 
+            // Restore Contact Checkboxes (default true in state if not set)
+            document.getElementById('check-contact-name').checked = appState.inputData.contact.includeName !== false;
+            document.getElementById('check-contact-org').checked = appState.inputData.contact.includeOrg !== false;
+            document.getElementById('check-contact-phone').checked = appState.inputData.contact.includePhone !== false;
+            document.getElementById('check-contact-email').checked = appState.inputData.contact.includeEmail !== false;
+            document.getElementById('check-contact-title').checked = appState.inputData.contact.includeTitle !== false;
+
             // Restore Customization UI
             document.getElementById('color-dots').value = appState.qrOptions.dotsOptions.color;
             document.getElementById('color-dots-text').value = appState.qrOptions.dotsOptions.color;
@@ -851,11 +910,104 @@
             setTimeout(openSavedProjects, 100); // Small delay to prevent conflict
         };
 
+        // --- Style Presets Logic ---
+
+        function saveStylePreset() {
+            Swal.fire({
+                title: 'Save Style Preset',
+                input: 'text',
+                inputLabel: 'Preset Name',
+                inputValue: 'My Style',
+                showCancelButton: true,
+                confirmButtonText: 'Save',
+            }).then((result) => {
+                if (result.isConfirmed && result.value) {
+                    const preset = {
+                        id: Date.now(),
+                        name: result.value,
+                        options: {
+                            dotsOptions: JSON.parse(JSON.stringify(appState.qrOptions.dotsOptions)),
+                            backgroundOptions: JSON.parse(JSON.stringify(appState.qrOptions.backgroundOptions)),
+                            cornersSquareOptions: JSON.parse(JSON.stringify(appState.qrOptions.cornersSquareOptions)),
+                            cornersDotOptions: JSON.parse(JSON.stringify(appState.qrOptions.cornersDotOptions)),
+                            // We do not save image/logo in style preset by default as it's usually specific to the QR,
+                            // but we could. For now, let's keep it strictly style (colors/shapes).
+                        }
+                    };
+                    appState.stylePresets.push(preset);
+                    saveToLocalStorage();
+                    renderStylePresets(preset.id);
+                    Swal.fire('Saved!', 'Style preset saved.', 'success');
+                }
+            });
+        }
+
+        function loadStylePreset(id) {
+            if (!id) return;
+            const preset = appState.stylePresets.find(p => p.id == id);
+            if (preset) {
+                // Merge options
+                appState.qrOptions.dotsOptions = JSON.parse(JSON.stringify(preset.options.dotsOptions));
+                appState.qrOptions.backgroundOptions = JSON.parse(JSON.stringify(preset.options.backgroundOptions));
+                appState.qrOptions.cornersSquareOptions = JSON.parse(JSON.stringify(preset.options.cornersSquareOptions));
+                appState.qrOptions.cornersDotOptions = JSON.parse(JSON.stringify(preset.options.cornersDotOptions));
+
+                updateQRCode();
+                restoreUIFromState(); // Syncs UI elements like color pickers
+                // Keep the dropdown selected
+                document.getElementById('style-preset-select').value = id;
+            }
+        }
+
+        function deleteStylePreset() {
+            const id = document.getElementById('style-preset-select').value;
+            if (!id) {
+                Swal.fire('No Preset Selected', 'Please select a preset to delete.', 'warning');
+                return;
+            }
+
+            Swal.fire({
+                title: 'Delete Preset?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    appState.stylePresets = appState.stylePresets.filter(p => p.id != id);
+                    saveToLocalStorage();
+                    renderStylePresets();
+                    Swal.fire('Deleted!', 'Your preset has been deleted.', 'success');
+                }
+            });
+        }
+
+        function renderStylePresets(selectedId = null) {
+            const select = document.getElementById('style-preset-select');
+            if (select) {
+                select.innerHTML = '<option value="">Select a preset...</option>';
+                appState.stylePresets.forEach(p => {
+                    const option = document.createElement('option');
+                    option.value = p.id;
+                    option.text = p.name;
+                    if (selectedId && p.id == selectedId) option.selected = true;
+                    select.appendChild(option);
+                });
+            }
+        }
+
+        // Expose to window for onclick handlers
+        window.saveStylePreset = saveStylePreset;
+        window.loadStylePreset = loadStylePreset;
+        window.deleteStylePreset = deleteStylePreset;
+
         // Init
         function init() {
             loadFromLocalStorage();
             initQRCode();
             setupEventListeners();
+            renderStylePresets();
 
             const loadedFromLink = loadFromShareLink();
             restoreUIFromState(); // Syncs UI with state (either default, loaded from local, or loaded from link)
