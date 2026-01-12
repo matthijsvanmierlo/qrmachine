@@ -265,8 +265,8 @@
             </div>
 
             <!-- Fixed/Sticky Preview Panel (Desktop: Right Side, Mobile: Bottom Sheet logic handled via CSS/JS later, but for now just bottom of stack) -->
-            <div class="w-full md:w-96 bg-white border-l border-gray-200 p-4 md:p-6 flex flex-col items-center justify-center shadow-lg z-20">
-                <div class="sticky top-6 flex flex-col items-center gap-6 w-full">
+            <div class="w-full md:w-96 bg-white border-l border-gray-200 p-4 md:p-6 flex flex-col md:overflow-y-auto shadow-lg z-20 md:h-full">
+                <div class="flex flex-col items-center gap-6 w-full my-auto">
                     <h2 class="text-lg font-semibold text-gray-700 self-start w-full flex justify-between items-center">
                         <span>Preview</span>
                         <span class="text-xs font-normal text-gray-400 bg-gray-100 px-2 py-1 rounded">Live Update</span>
@@ -429,9 +429,29 @@
 
         // --- Logic & Event Handling ---
 
+        function fixSVGViewBox() {
+            const container = document.getElementById("qr-container");
+            const svg = container.querySelector("svg");
+            if (svg) {
+                // Ensure 100% width/height for responsive scaling
+                svg.style.width = "100%";
+                svg.style.height = "100%";
+
+                // Add viewBox if missing to ensure scaling works
+                if (!svg.getAttribute("viewBox")) {
+                    const w = svg.getAttribute("width") || appState.qrOptions.width;
+                    const h = svg.getAttribute("height") || appState.qrOptions.height;
+                    if (w && h) {
+                        svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
+                    }
+                }
+            }
+        }
+
         function initQRCode() {
             qrCode = new QRCodeStyling(appState.qrOptions);
             qrCode.append(document.getElementById("qr-container"));
+            fixSVGViewBox();
         }
 
         function updateQRCode() {
@@ -474,6 +494,7 @@
 
             // Re-render
             qrCode.update(appState.qrOptions);
+            fixSVGViewBox();
         }
 
         function switchMode(mode) {
